@@ -1,7 +1,8 @@
 // /client/src/App.js
 
 import React from 'react';
-import './Dashboard.css';
+import { Link } from 'react-router-dom';
+import '../styling/Dashboard.css';
 
 function App() {
   return (
@@ -25,15 +26,12 @@ function App() {
         <div className="container">
           <section id="dashboard">
             <h2>Dashboard</h2>
-            <div className="grid">
-              <div className="card">
-                <h3>Recent Cases</h3>
-                <ul>
-                  <li>Case 1</li>
-                  <li>Case 2</li>
-                  <li>Case 3</li>
-                </ul>
-              </div>
+            <div className="grid">              
+                <div className="card">
+                  <Link to="/History">                
+                    <h3>History</h3>   
+                  </Link>                                 
+                </div>              
               <div className="card">
                 <h3>Threat Intelligence</h3>
                 <div id="threat-intelligence-news"></div>
