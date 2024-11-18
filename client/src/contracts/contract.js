@@ -40,34 +40,6 @@ export const contractABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "_fileHash",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fileName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_fileType",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_description",
-				"type": "string"
-			}
-		],
-		"name": "uploadFile",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
@@ -156,7 +128,48 @@ export const contractABI = [
 		],
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getFileNo",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_fileHash",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fileName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fileType",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_description",
+				"type": "string"
+			}
+		],
+		"name": "uploadFile",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	}
 ]
 
-export const contractAdd = "0xB75F0f0633E15A579F03a25093b789E43ef63c28";
+export const contractAdd = "0xE5d4f2Ce9BB5da529020e28D389cCBed7689C7F7";

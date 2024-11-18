@@ -5,10 +5,12 @@ import Web3 from 'web3';
 import { contractABI, contractAdd } from '../contracts/contract';
 import '../styling/History.css';
 
-const HistoryPage = ({ isOpen, onClose }) => {
+const HistoryPage = ({ isOpen = false, onClose = () => {} }) => {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  isOpen = true;
 
   useEffect(() => {
     if (isOpen) {
@@ -30,9 +32,9 @@ const HistoryPage = ({ isOpen, onClose }) => {
       const contract = new web3.eth.Contract(contractABI, contractAdd);
 
       const fileDetails = [];
-      let fileNo = 1; // Start fetching files from ID 1
+      const maxFiles = await contract.methods.getFileNo().call();
 
-      while (true) {
+      for (let fileNo = 1; fileNo <= maxFiles; fileNo++) {
         try {
           const file = await contract.methods.getFileInfo(fileNo).call();
           fileDetails.push({
@@ -41,17 +43,14 @@ const HistoryPage = ({ isOpen, onClose }) => {
             fileType: file.fileType,
             description: file.description,
             timestamp: file.timeStamp,
+            fileHash: file.fileHash,
           });
-          fileNo++;
         } catch (err) {
           if (err.message.includes("File not found")) break;
-          console.error("Error fetching file:", err);
           throw err;
         }
       }
-
       setFiles(fileDetails);
-      console.log(fileDetails);
     } catch (err) {
       console.error(err);
       setError(`Failed to fetch files: ${err.message}`);
@@ -84,8 +83,10 @@ const HistoryPage = ({ isOpen, onClose }) => {
                   <h3>{file.fileName}</h3>
                   <p><strong>Type:</strong> {file.fileType}</p>
                   <p><strong>Description:</strong> {file.description}</p>
-                  <p><strong>Uploaded on:</strong> {new Date(file.timestamp * 1000).toLocaleString()}</p>
-                  <Button onClick={() => window.open(`https://ipfs.io/ipfs/${file.fileHash}`, '_blank')}>
+                  <p><strong>Uploaded on:</strong> {new Date(Number(file.timestamp) * 1000).toLocaleString()}</p>
+                  <Button
+                    onClick={() => window.open(`https://ipfs.io/ipfs/${file.fileHash}`, '_blank')}
+                  >
                     View File
                   </Button>
                 </li>
