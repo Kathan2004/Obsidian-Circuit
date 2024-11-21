@@ -1,9 +1,10 @@
+// NetworkAnalysis.js
 import React, { useState } from 'react';
-import GeneratePDf from './GeneratePdf';
 
 function NetworkAnalysis() {
   const [files, setFiles] = useState([]);
-  const [analysisResult, setAnalysisResult] = useState('');
+  const [networkLogs, setNetworkLogs] = useState('');
+  const [suspiciousActivity, setSuspiciousActivity] = useState([]);
   const [error, setError] = useState('');
 
   const handleFileChange = (e) => {
@@ -20,10 +21,14 @@ function NetworkAnalysis() {
     formData.append('file', files[0]);
 
     try {
-      const response = await fetch('http://localhost:5000/api/analyze-network', {
+      const response = await fetch('http://localhost:1000/api/analyze-network', {  // Use the backend API URL
         method: 'POST',
         body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error('Server error');
+      }
 
       const data = await response.json();
 
@@ -31,10 +36,11 @@ function NetworkAnalysis() {
         setError(data.error);
       } else {
         setError('');
-        setAnalysisResult(JSON.stringify(data.analysisResult, null, 2));
+        setNetworkLogs(data.networkLogs);
+        setSuspiciousActivity(data.suspiciousActivity);
       }
     } catch (err) {
-      setError('Error uploading file.');
+      setError('Error uploading file: ' + err.message);
       console.error(err);
     }
   };
@@ -51,15 +57,29 @@ function NetworkAnalysis() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <div id="analysis-result">
-        {analysisResult ? (
-          <pre>{analysisResult}</pre>
+      <div id="network-logs">
+        {networkLogs ? (
+          <pre>{JSON.stringify(networkLogs, null, 2)}</pre>
         ) : (
           <p>No results yet. Upload a file to analyze.</p>
+        )}
+      </div>
+
+      <div id="suspicious-activity">
+        {suspiciousActivity.length > 0 ? (
+          <ul>
+            {suspiciousActivity.map((item, index) => (
+              <li key={index}>
+                <strong>{item.type}</strong>: {item.details}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No suspicious activity detected.</p>
         )}
       </div>
     </section>
   );
 }
 
-export default NetworkAnalysis;
+export default NetworkAnalysis; // Ensure you export it as the default export

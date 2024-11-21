@@ -3,14 +3,29 @@ import Web3 from "web3";
 import '../styling/form.css';
 import { contractABI, contractAdd } from "../contracts/contract";
 
+const IPFS = require('ipfs-mini');
+const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
 
 const Form = () => {
   const [formData, setFormData] = useState({
+    file: null,
     fileHash: "",
     fileName: "",
     fileType: "",
     description: "",
   });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prevData) => ({
+        ...prevData,
+        file,
+        fileName: file.name,
+        fileType: file.type,
+      }));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,30 +34,47 @@ const Form = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { fileHash, fileName, fileType, description } = formData;
+    const { file, fileName, fileType, description } = formData;
 
-    if (!fileHash || !fileName || !fileType || !description) {
+    if (!file || !fileName || !fileType || !description) {
       alert("All fields are required!");
       return;
     }
 
     try {
-      if (!window.ethereum) {
-        alert("MetaMask is not installed. Please install it to proceed.");
-        return;
-      }
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const arrayBuffer = reader.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        ipfs.add(uint8Array, async (err, hash) => {
+          if (err) {
+            console.error("Error uploading file to IPFS:", err);
+            alert("Failed to upload file to IPFS.");
+            return;
+          }
 
-      const web3 = new Web3(window.ethereum);
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const account = accounts[0];
-      const contract = new web3.eth.Contract(contractABI, contractAdd);
+          const fileHash = hash;
+          setFormData((prevData) => ({ ...prevData, fileHash }));
 
-      await contract.methods
-        .uploadFile(fileHash, fileName, fileType, description)
-        .send({ from: account });
+          if (!window.ethereum) {
+            alert("MetaMask is not installed. Please install it to proceed.");
+            return;
+          }
 
-      alert("File uploaded successfully!");
-      setFormData({ fileHash: "", fileName: "", fileType: "", description: "" });
+          const web3 = new Web3(window.ethereum);
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          const account = accounts[0];
+          const contract = new web3.eth.Contract(contractABI, contractAdd);
+
+          await contract.methods
+            .uploadFile(fileHash, fileName, fileType, description)
+            .send({ from: account });
+
+          alert("File uploaded successfully!");
+          setFormData({ file: null, fileHash: "", fileName: "", fileType: "", description: "" });
+        });
+      };
+      reader.readAsArrayBuffer(file);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Failed to upload the file. Please try again.");
@@ -54,14 +86,12 @@ const Form = () => {
       <h2 className="form-title">Upload File</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="fileHash">File Hash</label>
+          <label htmlFor="file">Select File</label>
           <input
-            type="text"
-            id="fileHash"
-            name="fileHash"
-            value={formData.fileHash}
-            onChange={handleChange}
-            placeholder="Enter file hash"
+            type="file"
+            id="file"
+            name="file"
+            onChange={handleFileChange}
             required
             className="form-input"
           />
@@ -92,6 +122,7 @@ const Form = () => {
             placeholder="Enter file type (e.g., PDF, JPEG)"
             required
             className="form-input"
+            disabled
           />
         </div>
 
