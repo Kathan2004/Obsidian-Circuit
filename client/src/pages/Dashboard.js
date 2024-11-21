@@ -82,8 +82,13 @@ function App() {
 
           <section id="reports">
             <h2>Reports</h2>
-            {/* Button to generate the report */}
-            <button onClick={handleGenerateReport}>Generate Report</button>
+            {/* Buttons to generate or upload the report */}
+            <div className="button-container">
+              <button onClick={handleGenerateReport}>Generate Report</button>
+              <Link to="/form">
+              <button >Upload Report</button>
+              </Link>
+            </div>
           </section>
         </div>
       </main>
