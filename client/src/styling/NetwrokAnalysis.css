@@ -1,0 +1,114 @@
+/* Glassmorphism Effect */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  }
+  
+  #network-analysis {
+    margin: 20px;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  /* Add a separate background to the header with neon blue effect */
+  h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
+    background: rgba(0, 0, 0, 0.4);  /* Grey background to separate it from the drop area */
+    padding: 15px;
+    border-radius: 10px;
+    color: #00ffff;  /* Neon blue color */
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff, 0 0 20px #00ffff, 0 0 25px #00ffff, 0 0 30px #00ffff, 0 0 35px #00ffff;
+  }
+  
+  /* Styling for the file drop area */
+  .drop-area {
+    border: 2px dashed #00ff6a;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.3); /* Glassmorphism effect */
+    margin-bottom: 20px;
+  }
+  
+  .drop-area:hover {
+    background-color: #3d3d3d;
+  }
+  
+  .drop-area i {
+    font-size: 4em;
+    margin-bottom: 10px;
+  }
+  
+  .drop-area p {
+    font-size: 1.2em;
+    margin-bottom: 0;
+  }
+  
+  #network-file-input {
+    display: none;
+  }
+  
+  /* Button styling */
+  button {
+    padding: 12px 20px;
+    background-color: #00ff6a;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #00cc00;
+  }
+  
+  /* Error message styling */
+  .error-message {
+    color: red;
+    font-size: 1.2em;
+    margin-top: 10px;
+  }
+  
+  #network-logs {
+    margin-top: 30px;
+  }
+  
+  pre {
+    background-color: #111;
+    color: #00ff6a;
+    padding: 20px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-family: 'Roboto Mono', monospace;
+  }
+  
+  #suspicious-activity {
+    margin-top: 30px;
+  }
+  
+  #suspicious-activity ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  #suspicious-activity li {
+    background: rgba(41, 41, 41, 0.6);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  #suspicious-activity strong {
+    color: #00ff6a;
+  }
+  
