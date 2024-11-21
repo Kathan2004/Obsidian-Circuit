@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import LogAnalysis from './LogAnalysis';  // Import the LogAnalysis component
-import NetworkAnalysis from './NetworkAnalysis';  // Import the NetworkAnalysis component
-import FileAnalysis from './FileAnalysis';  // Import the FileAnalysis component
-import GeneratePDF from './GeneratePdf';  // Import the PDF generation function
+import LogAnalysis from './LogAnalysis'; // Import the LogAnalysis component
+import NetworkAnalysis from './NetworkAnalysis'; // Import the NetworkAnalysis component
+import FileAnalysis from './FileAnalysis'; // Import the FileAnalysis component
+import generatePDF from './GeneratePdf'; // Import the PDF generation function
 import '../styling/Dashboard.css';
 
 function App() {
@@ -14,18 +14,18 @@ function App() {
   });
 
   const handleGenerateReport = async () => {
-    if (!reportData.logAnalysisData && !reportData.fileAnalysisData && !reportData.networkAnalysisData) {
+    if (
+      !reportData.logAnalysisData &&
+      !reportData.fileAnalysisData &&
+      !reportData.networkAnalysisData
+    ) {
       alert('Please complete at least one analysis before generating the report.');
       return;
     }
 
     try {
       // Generate the PDF report by passing the available data
-      await GeneratePDF({
-        logAnalysisData: reportData.logAnalysisData || null,
-        fileAnalysisData: reportData.fileAnalysisData || null,
-        networkAnalysisData: reportData.networkAnalysisData || null,
-      });
+      await generatePDF(reportData);
       alert('PDF generated successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);

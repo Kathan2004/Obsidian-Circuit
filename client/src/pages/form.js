@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import Web3 from "web3";
+import axios from "axios";
 import '../styling/form.css';
 import { contractABI, contractAdd } from "../contracts/contract";
-
-const IPFS = require('ipfs-mini');
-const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -15,23 +13,51 @@ const Form = () => {
     description: "",
   });
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prevData) => ({
-        ...prevData,
-        file,
-        fileName: file.name,
-        fileType: file.type,
-      }));
+  // Pinata API keys (make sure these are securely stored in an environment variable)
+  const pinataApiKey = '0796e12196871b0f2b9a';
+  const pinataApiSecret = '3defa5a42393cd201b3a1c59c701c677a1fa57c8b00f3ed9983d3d80f437a5b8';
+
+  // Pinata upload function
+  const uploadToPinata = async (file) => {
+    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers = {
+      'pinata_api_key': pinataApiKey,
+      'pinata_secret_api_key': pinataApiSecret,
+    };
+
+    try {
+      const response = await axios.post(url, formData, { headers });
+      return response.data.IpfsHash;  // Returning the CID
+    } catch (error) {
+      console.error("Error uploading to Pinata:", error);
+      throw new Error("File upload to Pinata failed");
     }
   };
 
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({
+        ...formData,
+        file,
+        fileName: file.name,
+        fileType: file.type,
+      });
+    }
+  };
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { file, fileName, fileType, description } = formData;
@@ -42,39 +68,27 @@ const Form = () => {
     }
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const arrayBuffer = reader.result;
-        const uint8Array = new Uint8Array(arrayBuffer);
-        ipfs.add(uint8Array, async (err, hash) => {
-          if (err) {
-            console.error("Error uploading file to IPFS:", err);
-            alert("Failed to upload file to IPFS.");
-            return;
-          }
+      // Upload file to Pinata
+      const fileHash = await uploadToPinata(file);
 
-          const fileHash = hash;
-          setFormData((prevData) => ({ ...prevData, fileHash }));
+      // Ensure MetaMask is available
+      if (!window.ethereum) {
+        alert("MetaMask is not installed. Please install it to proceed.");
+        return;
+      }
 
-          if (!window.ethereum) {
-            alert("MetaMask is not installed. Please install it to proceed.");
-            return;
-          }
+      const web3 = new Web3(window.ethereum);
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      const account = accounts[0];
+      const contract = new web3.eth.Contract(contractABI, contractAdd);
 
-          const web3 = new Web3(window.ethereum);
-          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-          const account = accounts[0];
-          const contract = new web3.eth.Contract(contractABI, contractAdd);
+      // Call contract to upload file information
+      await contract.methods
+        .uploadFile(fileHash, fileName, fileType, description)
+        .send({ from: account });
 
-          await contract.methods
-            .uploadFile(fileHash, fileName, fileType, description)
-            .send({ from: account });
-
-          alert("File uploaded successfully!");
-          setFormData({ file: null, fileHash: "", fileName: "", fileType: "", description: "" });
-        });
-      };
-      reader.readAsArrayBuffer(file);
+      alert("File uploaded successfully!");
+      setFormData({ file: null, fileHash: "", fileName: "", fileType: "", description: "" });
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Failed to upload the file. Please try again.");
@@ -85,6 +99,7 @@ const Form = () => {
     <div className="form-container glassy-theme">
       <h2 className="form-title">Upload File</h2>
       <form onSubmit={handleSubmit}>
+        {/* File Selection */}
         <div className="form-group">
           <label htmlFor="file">Select File</label>
           <input
@@ -97,6 +112,23 @@ const Form = () => {
           />
         </div>
 
+        {/* File Hash */}
+        <div className="form-group">
+          <label htmlFor="fileHash">File Hash</label>
+          <input
+            type="text"
+            id="fileHash"
+            name="fileHash"
+            value={formData.fileHash}
+            onChange={handleChange}
+            placeholder="File hash will be auto-filled after upload"
+            required
+            className="form-input"
+            disabled
+          />
+        </div>
+
+        {/* File Name */}
         <div className="form-group">
           <label htmlFor="fileName">File Name</label>
           <input
@@ -111,6 +143,7 @@ const Form = () => {
           />
         </div>
 
+        {/* File Type */}
         <div className="form-group">
           <label htmlFor="fileType">File Type</label>
           <input
@@ -122,10 +155,10 @@ const Form = () => {
             placeholder="Enter file type (e.g., PDF, JPEG)"
             required
             className="form-input"
-            disabled
           />
         </div>
 
+        {/* Description */}
         <div className="form-group">
           <label htmlFor="description">Description</label>
           <textarea

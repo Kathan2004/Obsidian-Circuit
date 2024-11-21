@@ -84,11 +84,10 @@ const HistoryPage = ({ isOpen = false, onClose = () => {} }) => {
                   <p><strong>Type:</strong> {file.fileType}</p>
                   <p><strong>Description:</strong> {file.description}</p>
                   <p><strong>Uploaded on:</strong> {new Date(Number(file.timestamp) * 1000).toLocaleString()}</p>
-                  <Button
-                    onClick={() => window.open(`https://ipfs.io/ipfs/${file.fileHash}`, '_blank')}
-                  >
-                    View File
-                  </Button>
+                  <button onClick={() => window.open(`https://white-advanced-caribou-666.mypinata.cloud/ipfs/${file.fileHash}`)}>
+                      View File
+                    </button>
+
                 </li>
               ))}
             </ul>
