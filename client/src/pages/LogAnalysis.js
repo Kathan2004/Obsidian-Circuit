@@ -1,113 +1,102 @@
-// /client/src/LogAnalysis.js
-
 import React, { useState } from 'react';
 
 function LogAnalysis() {
   const [logs, setLogs] = useState('');
-  const [blockedLogs, setBlockedLogs] = useState([]);
-  const [allowedLogs, setAllowedLogs] = useState([]);
   const [error, setError] = useState('');
+  const [analysisResult, setAnalysisResult] = useState(null);
 
-  const handleLogsChange = (e) => {
-    setLogs(e.target.value);  // Update the state with the new logs input
+  // Handle changes in the textarea where logs are entered
+  const handleLogsChange = (event) => {
+    setLogs(event.target.value);
   };
 
+  // Handle the analysis of logs
   const handleAnalyzeLogs = async () => {
-    if (logs.trim() === '') {
-      setError('Please paste some logs to analyze.');
+    if (!logs.trim()) {
+      setError('Please enter logs to analyze.');
       return;
     }
 
+    const requestPayload = { logs: logs };
+
     try {
-      // Send logs to the backend (Node.js server, which calls the Python script)
-      const response = await fetch('/api/analyze-logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ logs: logs.split('\n') })  // Split logs by new lines
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setBlockedLogs(data.blockedLogs);
-        setAllowedLogs(data.allowedLogs);
-        setError('');
-      }
-    } catch (error) {
-      setError('Error connecting to the server.');
+      // Process logs using backend logic directly in JS
+      const result = analyzeLogs(requestPayload.logs);
+      setError('');
+      setAnalysisResult(result); // Set analysis result to state
+    } catch (err) {
+      setError('Error processing logs.');
+      console.error(err);
     }
+  };
+
+  // Analyze the logs and classify them into safe or suspicious
+  const analyzeLogs = (logs) => {
+    const analysisResult = {
+      safe_logs: [],
+      suspicious_logs: []
+    };
+
+    // Define log patterns
+    const failedLoginPattern = /Failed login attempt from (\d+\.\d+\.\d+\.\d+)/;
+    const successLoginPattern = /Successful login from (\d+\.\d+\.\d+\.\d+)/;
+    const suspiciousActivityPattern = /Suspicious activity detected from (\d+\.\d+\.\d+\.\d+)/;
+
+    // Split logs by lines and analyze each line
+    const logLines = logs.split('\n');
+    logLines.forEach((log) => {
+      const failedMatch = log.match(failedLoginPattern);
+      const successMatch = log.match(successLoginPattern);
+      const suspiciousMatch = log.match(suspiciousActivityPattern);
+
+      if (failedMatch || suspiciousMatch) {
+        // If failed login or suspicious activity, classify as suspicious
+        analysisResult.suspicious_logs.push(log);
+      } else if (successMatch) {
+        // Successful login is classified as safe
+        analysisResult.safe_logs.push(log);
+      }
+    });
+
+    return analysisResult;
+  };
+
+  // Render the analysis results
+  const renderAnalysisResults = () => {
+    if (!analysisResult) return null;
+
+    return (
+      <div id="log-analysis-results">
+        <h3>Analysis Results:</h3>
+
+        <h4>Safe Logs:</h4>
+        <pre>{JSON.stringify(analysisResult.safe_logs, null, 2)}</pre>
+
+        <h4>Suspicious Logs:</h4>
+        <pre>{JSON.stringify(analysisResult.suspicious_logs, null, 2)}</pre>
+      </div>
+    );
   };
 
   return (
     <section id="log-analysis">
       <h2>Log Analysis</h2>
-      
-      <textarea
-        id="log-input"
-        placeholder="Paste logs here"
-        value={logs}
-        onChange={handleLogsChange}  // Update logs state when the text area changes
-      />
-      <button id="analyze-logs" onClick={handleAnalyzeLogs}>
-        Analyze
-      </button>
+      <div className="glass">
+        <textarea
+          id="log-input"
+          value={logs}
+          onChange={handleLogsChange}
+          placeholder="Paste logs here"
+          rows="10"
+          style={{ width: '100%', padding: '10px' }}
+        />
+      </div>
+
+      <button onClick={handleAnalyzeLogs}>Analyze Logs</button>
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <div id="log-analysis-results">
-        {/* Blocked Logs Table */}
-        <h3>Blocked Logs</h3>
-        {blockedLogs.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Action</th>
-                <th>Source IP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blockedLogs.map((log, index) => (
-                <tr key={index}>
-                  <td>{log.timestamp}</td>
-                  <td>{log.action}</td>
-                  <td>{log.source_ip}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No blocked logs found.</p>
-        )}
-
-        {/* Allowed Logs Table */}
-        <h3>Allowed Logs</h3>
-        {allowedLogs.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Action</th>
-                <th>Source IP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allowedLogs.map((log, index) => (
-                <tr key={index}>
-                  <td>{log.timestamp}</td>
-                  <td>{log.action}</td>
-                  <td>{log.source_ip}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No allowed logs found.</p>
-        )}
-      </div>
+      {renderAnalysisResults()}
     </section>
   );
 }

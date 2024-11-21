@@ -1,47 +1,45 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
+const bodyParser = require('body-parser');
 const { exec } = require('child_process');
+const path = require('path');
 
 const app = express();
 const PORT = 5000;
 
-// Set up Multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage: storage });
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
 
-// Route to handle file uploads and extract metadata
-app.post('/api/analyze-file', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+// Route to analyze logs sent as plain text
+app.post('/api/analyze-logs', (req, res) => {
+  const logs = req.body.logs;  // Logs sent from the React frontend
+
+  if (!logs || logs.trim() === '') {
+    return res.status(400).json({ error: 'No logs provided' });
   }
 
-  const filePath = path.resolve(req.file.path);
-  const pythonScriptPath = path.resolve(__dirname, 'Metadata.py');
+  // Temporarily save logs to a file
+  const fs = require('fs');
+  const tempLogFilePath = path.resolve(__dirname, 'uploads', 'temp_logs.txt');
+  fs.writeFileSync(tempLogFilePath, logs);
 
-  // Call Python script to extract metadata
-  exec(`python .\MetaData.py ${filePath}`, (error, stdout, stderr) => {
+  // Call the Python script to process the logs
+  const pythonScriptPath = path.resolve(__dirname, 'parse_logs.py');
+  const command = `python "${pythonScriptPath}" "${tempLogFilePath}"`;
+
+  exec(command, (error, stdout, stderr) => {
     if (error) {
       console.error(`Exec error: ${error.message}`);
-      return res.status(500).json({ error: 'Error executing Python script' });
+      return res.status(500).json({ error: `Error executing Python script: ${error.message}` });
     }
 
     if (stderr) {
-      console.error(`Stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Error in Python script' });
+      console.error(`stderr: ${stderr}`);
+      return res.status(500).json({ error: `stderr: ${stderr}` });
     }
 
     try {
-      const metadata = JSON.parse(stdout);
-      res.json({ metadata });
-      console.log(metadata);
+      const analysisResult = JSON.parse(stdout);
+      res.json({ analysisResult });
     } catch (err) {
       console.error('Error parsing Python output:', err);
       res.status(500).json({ error: 'Error parsing Python output' });

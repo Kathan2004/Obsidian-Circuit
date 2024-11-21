@@ -1,44 +1,44 @@
 import sys
 import json
-import pandas as pd
 import re
 
-# Log Parsing Function
-def parse_firewall_logs(logs):
-    parsed_logs = []
-    for log in logs:
-        # Parsing firewall logs
-        pattern = r"(?P<timestamp>\d+-\d+-\d+ \d+:\d+:\d+) Action=(?P<action>\w+) SourceIP=(?P<source_ip>[\d.]+)"
-        match = re.search(pattern, log)
-        if match:
-            parsed_logs.append(match.groupdict())
-    return pd.DataFrame(parsed_logs)
+def analyze_logs(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            logs = file.readlines()
 
-# Read logs from stdin (passed from Node.js)
-logs = json.loads(sys.stdin.read())
+        analysis_result = {
+            "safe_logs": [],
+            "suspicious_logs": []
+        }
 
-# Parse the logs
-parsed_logs_df = parse_firewall_logs(logs)
+        # Define log patterns (you can modify these based on your use case)
+        failed_login_pattern = r"Failed login attempt from (?P<ip>\d+\.\d+\.\d+\.\d+)"
+        success_login_pattern = r"Successful login from (?P<ip>\d+\.\d+\.\d+\.\d+)"
+        suspicious_activity_pattern = r"Suspicious activity detected from (?P<ip>\d+\.\d+\.\d+\.\d+)"
 
-# Convert timestamps to datetime for easier analysis
-parsed_logs_df["timestamp"] = pd.to_datetime(parsed_logs_df["timestamp"])
+        # Analyzing the logs for specific patterns
+        for log in logs:
+            failed_match = re.search(failed_login_pattern, log)
+            success_match = re.search(success_login_pattern, log)
+            suspicious_match = re.search(suspicious_activity_pattern, log)
 
-# Separate blocked and allowed logs
-blocked_logs_df = parsed_logs_df[parsed_logs_df['action'] == 'block']
-allowed_logs_df = parsed_logs_df[parsed_logs_df['action'] == 'allow']
+            if failed_match or suspicious_match:
+                # If failed login or suspicious activity, classify as suspicious
+                analysis_result["suspicious_logs"].append(log.strip())
+            elif success_match:
+                # Successful login is classified as safe
+                analysis_result["safe_logs"].append(log.strip())
 
-# Convert both blocked and allowed logs to JSON
-blocked_logs_json = blocked_logs_df.to_dict(orient='records')
-allowed_logs_json = allowed_logs_df.to_dict(orient='records')
+        return analysis_result
+    except Exception as e:
+        return {"error": str(e)}
 
-# Convert timestamps to string format (ISO format) before serializing to JSON
-for log in blocked_logs_json + allowed_logs_json:
-    log['timestamp'] = log['timestamp'].isoformat()  # Convert pandas Timestamp to string
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python parse_logs.py <file_path>")
+        sys.exit(1)
 
-# Output the result in JSON format
-result = {
-    'blockedLogs': blocked_logs_json,
-    'allowedLogs': allowed_logs_json
-}
-
-print(json.dumps(result))  # Print the result
+    file_path = sys.argv[1]
+    result = analyze_logs(file_path)
+    print(json.dumps(result, indent=4))  # Output result as JSON

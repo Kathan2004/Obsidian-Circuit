@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import mime from 'mime';
 import CryptoJS from 'crypto-js';
+import '../styling/FileAnalysis.css';
 
 function FileAnalysis() {
   const [files, setFiles] = useState([]);
   const [metadata, setMetadata] = useState([]);
   const [error, setError] = useState('');
+  const [isMetadataVisible, setMetadataVisible] = useState(false); // Renamed for clarity
 
   const handleDrop = (event) => {
     event.preventDefault();
@@ -13,6 +15,10 @@ function FileAnalysis() {
     if (droppedFiles.length) {
       handleFiles(droppedFiles);
     }
+  };
+
+  const handleMetadataVisibility = () => {
+    setMetadataVisible(prev => !prev); // Show metadata after the button click
   };
 
   const handleFiles = (newFiles) => {
@@ -53,12 +59,7 @@ function FileAnalysis() {
     return metadata.map((file, index) => (
       <div className="file-info" key={index}>
         <p><strong>Name:</strong> {file.name}</p>
-        <p><strong>Size:</strong> {file.size}</p>
-        <p><strong>Last Modified:</strong> {file.lastModified}</p>
         <p><strong>File Type:</strong> {file.fileType}</p>
-        <p><strong>MD5 Hash:</strong> {file.md5Hash}</p>
-        <p><strong>SHA-1 Hash:</strong> {file.sha1Hash}</p>
-        <p><strong>SHA-256 Hash:</strong> {file.sha256Hash}</p>
       </div>
     ));
   };
@@ -70,7 +71,7 @@ function FileAnalysis() {
     }
 
     const formData = new FormData();
-    formData.append('file', files[0]);
+    files.forEach(file => formData.append('file', file));
 
     try {
       const response = await fetch('http://localhost:5000/api/analyze-file', {
@@ -84,7 +85,7 @@ function FileAnalysis() {
         setError(data.error);
       } else {
         setError('');
-        setMetadata(data.metadata); // Display metadata in frontend
+        setMetadata(data.metadata);  // Set metadata visibility to true when the button is clicked
       }
     } catch (err) {
       setError('Error uploading file.');
@@ -118,11 +119,11 @@ function FileAnalysis() {
         </div>
       </div>
 
-      <button onClick={handleFileUpload}>Upload and Extract Metadata</button>
+      <button onClick={handleMetadataVisibility}>Upload and Extract Metadata</button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {metadata && (
+      {isMetadataVisible && (
         <div id="metadata-result">
           <h3>File Metadata:</h3>
           <pre>{JSON.stringify(metadata, null, 2)}</pre>

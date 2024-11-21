@@ -57,7 +57,6 @@ function App() {
 
           <section id="reports">
             <h2>Reports</h2>
-            <p>Generate and manage investigation reports.</p>
           </section>
         </div>
       </main>
