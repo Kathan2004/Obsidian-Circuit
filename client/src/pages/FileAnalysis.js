@@ -3,11 +3,11 @@ import mime from 'mime';
 import CryptoJS from 'crypto-js';
 import '../styling/FileAnalysis.css';
 
-function FileAnalysis() {
+function FileAnalysis({ setReportData }) {
   const [files, setFiles] = useState([]);
   const [metadata, setMetadata] = useState([]);
   const [error, setError] = useState('');
-  const [isMetadataVisible, setMetadataVisible] = useState(false); // Renamed for clarity
+  const [isMetadataVisible, setMetadataVisible] = useState(false);
 
   const handleDrop = (event) => {
     event.preventDefault();
@@ -18,7 +18,7 @@ function FileAnalysis() {
   };
 
   const handleMetadataVisibility = () => {
-    setMetadataVisible(prev => !prev); // Show metadata after the button click
+    setMetadataVisible((prev) => !prev);
   };
 
   const handleFiles = (newFiles) => {
@@ -28,9 +28,12 @@ function FileAnalysis() {
   };
 
   const extractMetadata = (fileArray) => {
-    fileArray.forEach(file => {
+    const extractedMetadata = [];
+
+    fileArray.forEach((file) => {
       const fileType = mime.getType(file.name);
       const reader = new FileReader();
+
       reader.onload = (event) => {
         const arrayBuffer = event.target.result;
         const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
@@ -38,19 +41,26 @@ function FileAnalysis() {
         const sha1Hash = CryptoJS.SHA1(wordArray).toString();
         const sha256Hash = CryptoJS.SHA256(wordArray).toString();
 
-        setMetadata(prevMetadata => [
-          ...prevMetadata,
-          {
-            name: file.name,
-            size: (file.size / 1024).toFixed(2) + ' KB',
-            lastModified: new Date(file.lastModified).toLocaleDateString(),
-            fileType: fileType,
-            md5Hash: md5Hash,
-            sha1Hash: sha1Hash,
-            sha256Hash: sha256Hash,
-          },
-        ]);
+        const fileMetadata = {
+          name: file.name,
+          size: (file.size / 1024).toFixed(2) + ' KB',
+          lastModified: new Date(file.lastModified).toLocaleDateString(),
+          fileType: fileType,
+          md5Hash: md5Hash,
+          sha1Hash: sha1Hash,
+          sha256Hash: sha256Hash,
+        };
+
+        extractedMetadata.push(fileMetadata);
+
+        // Update metadata state and pass data to parent
+        setMetadata((prevMetadata) => [...prevMetadata, fileMetadata]);
+        setReportData((prev) => ({
+          ...prev,
+          fileAnalysisData: [...(prev.fileAnalysisData || []), fileMetadata],
+        }));
       };
+
       reader.readAsArrayBuffer(file);
     });
   };
@@ -71,7 +81,7 @@ function FileAnalysis() {
     }
 
     const formData = new FormData();
-    files.forEach(file => formData.append('file', file));
+    files.forEach((file) => formData.append('file', file));
 
     try {
       const response = await fetch('http://localhost:5000/api/analyze-file', {
@@ -85,7 +95,11 @@ function FileAnalysis() {
         setError(data.error);
       } else {
         setError('');
-        setMetadata(data.metadata);  // Set metadata visibility to true when the button is clicked
+        setMetadata(data.metadata);
+        setReportData((prev) => ({
+          ...prev,
+          fileAnalysisData: data.metadata,
+        }));
       }
     } catch (err) {
       setError('Error uploading file.');

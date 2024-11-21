@@ -1,13 +1,38 @@
-// /client/src/App.js
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import LogAnalysis from './LogAnalysis';  // Import the LogAnalysis component
 import NetworkAnalysis from './NetworkAnalysis';  // Import the NetworkAnalysis component
 import FileAnalysis from './FileAnalysis';  // Import the FileAnalysis component
+import GeneratePDF from './GeneratePdf';  // Import the PDF generation function
 import '../styling/Dashboard.css';
 
 function App() {
+  const [reportData, setReportData] = useState({
+    logAnalysisData: null,
+    fileAnalysisData: null,
+    networkAnalysisData: null,
+  });
+
+  const handleGenerateReport = async () => {
+    if (!reportData.logAnalysisData && !reportData.fileAnalysisData && !reportData.networkAnalysisData) {
+      alert('Please complete at least one analysis before generating the report.');
+      return;
+    }
+
+    try {
+      // Generate the PDF report by passing the available data
+      await GeneratePDF({
+        logAnalysisData: reportData.logAnalysisData || null,
+        fileAnalysisData: reportData.fileAnalysisData || null,
+        networkAnalysisData: reportData.networkAnalysisData || null,
+      });
+      alert('PDF generated successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating the report.');
+    }
+  };
+
   return (
     <div className="App">
       <header>
@@ -31,9 +56,9 @@ function App() {
             <h2>Dashboard</h2>
             <div className="grid">
               <div className="card">
-                <Link to="/History">                
-                  <h3>History</h3>   
-                </Link>                                 
+                <Link to="/History">
+                  <h3>History</h3>
+                </Link>
               </div>
               <div className="card">
                 <h3>Threat Intelligence</h3>
@@ -47,16 +72,18 @@ function App() {
           </section>
 
           {/* File Analysis Section */}
-          <FileAnalysis />  {/* This will render the FileAnalysis component */}
+          <FileAnalysis setReportData={setReportData} />
 
           <section id="network-analysis">
-            <NetworkAnalysis />  {/* This will render the NetworkAnalysis component */}
+            <NetworkAnalysis setReportData={setReportData} />
           </section>
 
-          <LogAnalysis />  {/* This will render the LogAnalysis component */}
+          <LogAnalysis setReportData={setReportData} />
 
           <section id="reports">
             <h2>Reports</h2>
+            {/* Button to generate the report */}
+            <button onClick={handleGenerateReport}>Generate Report</button>
           </section>
         </div>
       </main>

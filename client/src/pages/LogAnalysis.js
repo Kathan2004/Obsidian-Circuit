@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import '../styling/LogAnalysis.css'; // Optional: Add styling if needed
 
-function LogAnalysis() {
+function LogAnalysis({ setReportData }) {
   const [logs, setLogs] = useState('');
   const [error, setError] = useState('');
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -24,6 +25,12 @@ function LogAnalysis() {
       const result = analyzeLogs(requestPayload.logs);
       setError('');
       setAnalysisResult(result); // Set analysis result to state
+
+      // Pass the result to the parent component using setReportData
+      setReportData((prev) => ({
+        ...prev,
+        logAnalysisData: result,
+      }));
     } catch (err) {
       setError('Error processing logs.');
       console.error(err);
@@ -34,7 +41,7 @@ function LogAnalysis() {
   const analyzeLogs = (logs) => {
     const analysisResult = {
       safe_logs: [],
-      suspicious_logs: []
+      suspicious_logs: [],
     };
 
     // Define log patterns

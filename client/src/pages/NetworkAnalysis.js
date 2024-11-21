@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GeneratePDf from './GeneratePdf';
 
 function NetworkAnalysis() {
   const [files, setFiles] = useState([]);
