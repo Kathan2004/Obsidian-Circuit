@@ -1,8 +1,15 @@
 import { jsPDF } from 'jspdf';
 
-const generatePDF = async ({ logAnalysisData, fileAnalysisData, networkAnalysisData }) => {
+const generatePDF = async (reportData) => {
   return new Promise((resolve, reject) => {
     try {
+      const { logAnalysisData, fileAnalysisData, networkAnalysisData } = reportData;
+
+      if (!logAnalysisData && !fileAnalysisData && !networkAnalysisData) {
+        reject('Please complete at least one analysis before generating the report.');
+        return;
+      }
+
       const doc = new jsPDF();
 
       // Title for the PDF
