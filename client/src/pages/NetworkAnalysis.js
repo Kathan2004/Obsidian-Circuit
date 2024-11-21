@@ -1,5 +1,5 @@
-// NetworkAnalysis.js
 import React, { useState } from 'react';
+import '../styling/NetwrokAnalysis.css'; // Import the corresponding CSS file
 
 function NetworkAnalysis() {
   const [files, setFiles] = useState([]);
@@ -46,18 +46,25 @@ function NetworkAnalysis() {
   };
 
   return (
-    <section id="network-analysis">
+    <section id="network-analysis" className="glass">
       <h2>Network Analysis</h2>
-      <input
-        type="file"
-        accept=".pcap,.pcapng"
-        onChange={handleFileChange}
-      />
+      <div className="drop-area">
+        <input
+          type="file"
+          accept=".pcap,.pcapng"
+          onChange={handleFileChange}
+          id="network-file-input"
+        />
+        <label htmlFor="network-file-input">
+          <i className="fas fa-cloud-upload-alt"></i>
+          <p>Drag and drop a PCAP file or click to browse</p>
+        </label>
+      </div>
       <button onClick={handleFileUpload}>Upload and Analyze</button>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
 
-      <div id="network-logs">
+      <div id="network-logs" className="glass">
         {networkLogs ? (
           <pre>{JSON.stringify(networkLogs, null, 2)}</pre>
         ) : (
@@ -65,7 +72,7 @@ function NetworkAnalysis() {
         )}
       </div>
 
-      <div id="suspicious-activity">
+      <div id="suspicious-activity" className="glass">
         {suspiciousActivity.length > 0 ? (
           <ul>
             {suspiciousActivity.map((item, index) => (
@@ -82,4 +89,4 @@ function NetworkAnalysis() {
   );
 }
 
-export default NetworkAnalysis; // Ensure you export it as the default export
+export default NetworkAnalysis;

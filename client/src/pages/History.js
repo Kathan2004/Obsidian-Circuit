@@ -45,12 +45,14 @@ const HistoryPage = ({ isOpen = false, onClose = () => {} }) => {
             timestamp: file.timeStamp,
             fileHash: file.fileHash,
           });
+          
         } catch (err) {
           if (err.message.includes("File not found")) break;
           throw err;
         }
       }
       setFiles(fileDetails);
+      console.log(fileDetails);
     } catch (err) {
       console.error(err);
       setError(`Failed to fetch files: ${err.message}`);
@@ -84,7 +86,7 @@ const HistoryPage = ({ isOpen = false, onClose = () => {} }) => {
                   <p><strong>Type:</strong> {file.fileType}</p>
                   <p><strong>Description:</strong> {file.description}</p>
                   <p><strong>Uploaded on:</strong> {new Date(Number(file.timestamp) * 1000).toLocaleString()}</p>
-                  <button onClick={() => window.open(`https://white-advanced-caribou-666.mypinata.cloud/ipfs/${file.fileHash}`)}>
+                  <button onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/ipfs/${file.fileHash}`)}>
                       View File
                     </button>
 
