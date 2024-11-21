@@ -220,3 +220,15 @@ footer {
 button, input[type="file"] {
   transition: all 0.3s ease;
 }
+
+.button-container {
+  display: flex;
+  gap: 10px; /* Adds space between the buttons */
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
