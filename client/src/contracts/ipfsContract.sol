@@ -28,6 +28,8 @@ contract DecentralizedFileStorage {
         require(bytes(_fileName).length > 0, "File name is required");
         require(bytes(_fileType).length > 0, "File type is required");
         require(bytes(_description).length > 0, "File description is required");
+        // Evidence records are write-once: re-registering a hash must not replace the original uploader or time.
+        require(files[_fileHash].timestamp == 0, "File already registered");
 
         files[_fileHash] = File({
             fileHash: _fileHash,

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import '../styling/NetwrokAnalysis.css'; // Import the corresponding CSS file
+import { API_URL } from '../lib/api';
 
 function NetworkAnalysis() {
   const [files, setFiles] = useState([]);
-  const [networkLogs, setNetworkLogs] = useState('');
+  const [networkLogs, setNetworkLogs] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [suspiciousActivity, setSuspiciousActivity] = useState([]);
   const [error, setError] = useState('');
 
@@ -21,7 +23,7 @@ function NetworkAnalysis() {
     formData.append('file', files[0]);
 
     try {
-      const response = await fetch('http://localhost:1000/api/analyze-network', {  // Use the backend API URL
+      const response = await fetch(`${API_URL}/api/analyze-network`, {  // Use the backend API URL
         method: 'POST',
         body: formData,
       });
@@ -36,7 +38,8 @@ function NetworkAnalysis() {
         setError(data.error);
       } else {
         setError('');
-        setNetworkLogs(data.networkLogs);
+        setNetworkLogs(data.networkLogs || []);
+        setSummary(data.summary || null);
         setSuspiciousActivity(data.suspiciousActivity);
       }
     } catch (err) {
@@ -51,7 +54,7 @@ function NetworkAnalysis() {
       <div className="drop-area">
         <input
           type="file"
-          accept=".pcap,.pcapng"
+          accept=".pcap,.cap"
           onChange={handleFileChange}
           id="network-file-input"
         />
@@ -65,8 +68,29 @@ function NetworkAnalysis() {
       {error && <p className="error-message">{error}</p>}
 
       <div id="network-logs" className="glass">
-        {networkLogs ? (
-          <pre>{JSON.stringify(networkLogs, null, 2)}</pre>
+        {summary && (
+          <p>
+            {summary.totalPackets} packets, {summary.decodedIPv4} IPv4 decoded
+            {networkLogs.length < summary.decodedIPv4 ? ` (showing first ${networkLogs.length})` : ''}
+          </p>
+        )}
+        {networkLogs.length > 0 ? (
+          <table>
+            <thead>
+              <tr><th>Source</th><th>Destination</th><th>Proto</th><th>Flags</th><th>Bytes</th></tr>
+            </thead>
+            <tbody>
+              {networkLogs.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.src}{p.srcPort !== undefined ? `:${p.srcPort}` : ''}</td>
+                  <td>{p.dst}{p.dstPort !== undefined ? `:${p.dstPort}` : ''}</td>
+                  <td>{p.protocol}</td>
+                  <td>{p.flags || ''}</td>
+                  <td>{p.length}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : (
           <p>No results yet. Upload a file to analyze.</p>
         )}
