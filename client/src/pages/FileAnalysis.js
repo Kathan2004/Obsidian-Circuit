@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import mime from 'mime';
 import CryptoJS from 'crypto-js';
 import '../styling/FileAnalysis.css';
+import { API_URL } from '../lib/api';
 
 function FileAnalysis({ setReportData }) {
   const [files, setFiles] = useState([]);
@@ -84,7 +85,7 @@ function FileAnalysis({ setReportData }) {
     files.forEach((file) => formData.append('file', file));
 
     try {
-      const response = await fetch('http://localhost:5000/api/analyze-file', {
+      const response = await fetch(`${API_URL}/api/analyze-file`, {
         method: 'POST',
         body: formData,
       });

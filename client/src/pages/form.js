@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Web3 from "web3";
-import axios from "axios";
 import '../styling/form.css';
 import { contractABI, contractAdd } from "../contracts/contract";
+import { API_URL } from "../lib/api";
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -13,29 +13,16 @@ const Form = () => {
     description: "",
   });
 
-  // Pinata API keys (make sure these are securely stored in an environment variable)
-  const pinataApiKey = '***REMOVED***';
-  const pinataApiSecret = '***REMOVED***';
-
-  // Pinata upload function
+  // Pin through our API so Pinata credentials never ship in the browser bundle.
   const uploadToPinata = async (file) => {
-    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const headers = {
-      'pinata_api_key': pinataApiKey,
-      'pinata_secret_api_key': pinataApiSecret,
-    };
-
-    try {
-      const response = await axios.post(url, formData, { headers });
-      return response.data.IpfsHash;  // Returning the CID
-    } catch (error) {
-      console.error("Error uploading to Pinata:", error);
-      throw new Error("File upload to Pinata failed");
+    const body = new FormData();
+    body.append("file", file);
+    const response = await fetch(`${API_URL}/api/pin`, { method: "POST", body });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.cid) {
+      throw new Error(data.error || "File upload to IPFS failed");
     }
+    return data.cid;
   };
 
   // Handle form field changes
